@@ -18,7 +18,7 @@ jobs:
         run: |
           set +e
           cd dyn_dll
-          used_in_tests=$( perl -nE'm!DYN_DLL_F\(DYN_DLL_TYPE_NAME, (_\w+)\)\((void|struct DYN_DLL_TYPE_NAME.*).+\);$! and say $1' dyn_dll.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -c -o "$which" -- tests | wc -l )" ; done )
+          used_in_tests=$( perl -nE'm!DYN_DLL_F\(DYN_DLL_TYPE_NAME, (_\w+)\)\((void|struct DYN_DLL_TYPE_NAME.*).+\);$! and say $1' dyn_dll.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -o "$which" -- tests | wc -l )" ; done | sort -rnk2 )
           not_tested=$( printf '%s\n' "$used_in_tests" | grep '[ ]0$' )
           if [[ -n "$not_tested" ]]; then
             >&2 echo "dyn_dll NOT TESTED:"
