@@ -1,0 +1,56 @@
+name: "Compile and test"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  debian-bullseye:
+    runs-on: ubuntu-latest
+    container: debian:bullseye
+    steps:
+      - uses: actions/checkout@v4
+      - name: install prereqs
+        timeout-minutes: 10
+        run: |
+          apt-get -qq update
+          apt-get -qq install -y build-essential git-core perl valgrind
+      - name: dyn_dll examples
+        timeout-minutes: 2
+        run: |
+          cd dyn_dll
+          ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
+          ( cd examples/two_files ; make ; ./two_files )
+          ( cd examples/makefile_gen ; make ; ./makefile_gen )
+      - name: dyn_dll tests
+        timeout-minutes: 2
+        run: |
+          cd dyn_dll/tests
+          make
+  debian-bookworm:
+    runs-on: ubuntu-latest
+    container: debian:bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - name: install prereqs
+        timeout-minutes: 10
+        run: |
+          apt-get -qq update
+          apt-get -qq install -y build-essential git-core perl valgrind
+      - name: dyn_dll examples
+        timeout-minutes: 2
+        run: |
+          cd dyn_dll
+          ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
+          ( cd examples/two_files ; make ; ./two_files )
+          ( cd examples/makefile_gen ; make ; ./makefile_gen )
+      - name: dyn_dll tests
+        timeout-minutes: 2
+        run: |
+          cd dyn_dll/tests
+          make
