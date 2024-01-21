@@ -27,6 +27,19 @@ jobs:
           fi
           echo "dyn_dll tests by function:"
           printf '%s\n' "$used_in_tests"
+      - name: dyn_kvp all functions tested at least once
+        run: |
+          set +e
+          cd dyn_kvp
+          used_in_tests=$( perl -nE'm!DYN_KVP_F\(DYN_KVP_TYPE_NAME, (_\w+)\)\((void|struct DYN_KVP_TYPE_NAME.*).+\);$! and say $1' dyn_kvp.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -o "$which" -- tests | wc -l )" ; done | sort -rnk2 )
+          not_tested=$( printf '%s\n' "$used_in_tests" | grep -v _stats_printf | grep '[ ]0$' )
+          if [[ -n "$not_tested" ]]; then
+            >&2 echo "dyn_kvp NOT TESTED:"
+            printf '%s\n' "$not_tested"
+            exit 1
+          fi
+          echo "dyn_kvp tests by function:"
+          printf '%s\n' "$used_in_tests"
   debian-bullseye:
     needs: exhaustive-tests
     if: always()
@@ -51,6 +64,18 @@ jobs:
         run: |
           cd dyn_dll/tests
           make
+      - name: dyn_kvp examples
+        timeout-minutes: 2
+        run: |
+          cd dyn_kvp
+          ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
+          ( cd examples/two_files ; make ; ./two_files )
+          ( cd examples/makefile_gen ; make ; ./makefile_gen )
+      - name: dyn_kvp tests
+        timeout-minutes: 2
+        run: |
+          cd dyn_kvp/tests
+          make
   debian-bookworm:
     needs: exhaustive-tests
     if: always()
@@ -74,4 +99,16 @@ jobs:
         timeout-minutes: 2
         run: |
           cd dyn_dll/tests
+          make
+      - name: dyn_kvp examples
+        timeout-minutes: 2
+        run: |
+          cd dyn_kvp
+          ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
+          ( cd examples/two_files ; make ; ./two_files )
+          ( cd examples/makefile_gen ; make ; ./makefile_gen )
+      - name: dyn_kvp tests
+        timeout-minutes: 2
+        run: |
+          cd dyn_kvp/tests
           make
