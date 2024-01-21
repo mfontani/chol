@@ -151,7 +151,7 @@ foo_list.c: Makefile dyn_dll.h foo_list.h
 	@rm -f $@
 	@printf '// Automatically generated from %s.\n' "$^" > $@
 	@printf '// Automatically generated on   %s\n' "$$(date)" >> $@
-    @printf '#include "your_project_other_includes.h"\n' >> $@
+	@printf '#include "your_project_other_includes.h"\n' >> $@
 	@printf '#include "char_data_dll.h"\n' >> $@
 	@gcc -E -P -CC -D DYN_DLL_VALUE_TYPE=struct foo' -D DYN_DLL_TYPE_NAME=foo_list -D DYN_DLL_IMPLEMENTATION dyn_dll.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$$' >> $@
 	@chmod -w $@
