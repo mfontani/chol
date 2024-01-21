@@ -5,6 +5,7 @@ run_tests: test
 
 C_FILES=$(wildcard */*.c)
 C_FILES+=main.c
+C_FILES+=../../tap/tap.c
 H_FILES=$(wildcard */*.h)
 
 test: $(C_FILES) $(H_FILES)
