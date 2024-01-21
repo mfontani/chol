@@ -10,7 +10,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  exhaustive-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: dyn_dll all functions tested at least once
+        run: |
+          set +e
+          cd dyn_dll
+          used_in_tests=$( perl -nE'm!DYN_DLL_F\(DYN_DLL_TYPE_NAME, (_\w+)\)\((void|struct DYN_DLL_TYPE_NAME.*).+\);$! and say $1' dyn_dll.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -c -o "$which" -- tests | wc -l )" ; done )
+          not_tested=$( printf '%s\n' "$used_in_tests" | grep '[ ]0$' )
+          if [[ -n "$not_tested" ]]; then
+            >&2 echo "dyn_dll NOT TESTED:"
+            printf '%s\n' "$not_tested"
+            exit 1
+          fi
+          echo "dyn_dll tests by function:"
+          printf '%s\n' "$used_in_tests"
   debian-bullseye:
+    needs: exhaustive-tests
+    if: always()
     runs-on: ubuntu-latest
     container: debian:bullseye
     steps:
@@ -33,6 +52,8 @@ jobs:
           cd dyn_dll/tests
           make
   debian-bookworm:
+    needs: exhaustive-tests
+    if: always()
     runs-on: ubuntu-latest
     container: debian:bookworm
     steps:
