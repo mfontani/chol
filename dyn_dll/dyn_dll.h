@@ -41,27 +41,17 @@
 # error "dyn_dll.h uses DYN_DLL_MEMBER_NAME as a macro, but it's already defined"
 #endif
 #define DYN_DLL_MEMBER_NAME DYN_DLL_F(DYN_DLL_TYPE_NAME, __member)
+struct DYN_DLL_MEMBER_NAME {
+    DYN_DLL_VALUE_TYPE *p;
+    struct DYN_DLL_MEMBER_NAME *next;
+    struct DYN_DLL_MEMBER_NAME *prev;
+};
 
-#ifdef DYN_DLL_DEFINE_MEMBER_STRUCT
-# error "dyn_dll.h uses DYN_DLL_DEFINE_MEMBER_STRUCT as a macro, but it's already defined"
-#endif
-#define DYN_DLL_DEFINE_MEMBER_STRUCT(valuetype, structname) \
-    struct structname { \
-        valuetype *p; \
-        struct structname *next; \
-        struct structname *prev; \
-    }
-DYN_DLL_DEFINE_MEMBER_STRUCT(DYN_DLL_VALUE_TYPE, DYN_DLL_MEMBER_NAME);
-
-#define DYN_DLL_DEFINE_DLL_STRUCT(member_structname, structname) \
-    typedef struct structname { \
-        struct member_structname *first; \
-        struct member_structname *last; \
-        size_t size; \
-    } structname
-DYN_DLL_DEFINE_DLL_STRUCT(DYN_DLL_MEMBER_NAME, DYN_DLL_TYPE_NAME);
-#undef DYN_DLL_DEFINE_MEMBER_STRUCT
-#undef DYN_DLL_DEFINE_DLL_STRUCT
+struct DYN_DLL_TYPE_NAME {
+    struct DYN_DLL_MEMBER_NAME *first;
+    struct DYN_DLL_MEMBER_NAME *last;
+    size_t size;
+};
 
 #else
 
