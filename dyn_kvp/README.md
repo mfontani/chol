@@ -190,6 +190,38 @@ The backbone of a hash.
 
 Returns `0` if the "key" isn't found in the hash, or non-`0` if it is found.
 
+## `_clear`
+
+Clears the hash of any key/values in it.
+
+## `_copy`
+
+Returns a separate (new) copy of the given hash, with the given "new_size". Remember to `_free` them!
+
+This might also be handy to "resize" a given hash (albeit not in-line!), if the `_stats` make it look like its "load_factor" or the "avg_chain_len" are too high and a better "size" for it might be more appropriate:
+
+```c
+// Somewhere in your code...
+{
+    struct foo_kvp_stats stats = foo_kvp_stats(old_hash);
+    // Pick a better method than this example:
+    if (stats.load_factor > 0.8 || stats.avg_chain_len > 1.8)
+    {
+        size_t new_size = stats.size * 3; // Pick a better method than this...
+        struct foo_kvp *new_hash = foo_kvp_copy(old_hash, new_size);
+        foo_kvp_free(old_hash);
+        old_hash = new_hash;
+    }
+}
+// Done, continue using "old_hash", but with a "better" size if required.
+```
+
+## `_merge`
+
+Returns a new hash with keys and values from the first one, _then_ keys and values from the second one, and the given "new_size". Remember to `_free` them!
+
+If a key is found in both hashes, the value from the _second_ one will be put in the one returned. Order matters!
+
 # Member Functions
 
 It's often useful to "get" all key/values from a hash, to then do whatever one wants.
@@ -199,6 +231,28 @@ A `struct foo_kvp_kv` is provided, which contains the "key", "value", and a usel
 You can `_kv_get` to get a `struct foo_kvp_kv **` which contains all the key/values in the hash, ended by a `NULL` pointer.
 
 Once done with it, you can `_kv_free` it.
+
+# Statistics
+
+Some statistics can be printed to STDOUT with the `_stats_printf` function.
+
+A `_stats` struct is avilable if you need more programmatic insights into a hash's statistics. It get populated by the `_stats` function:
+
+```c
+struct foo_kvp_stats hash_stats = foo_kvp_stats(hash);
+```
+
+You can then look at the struct's contents to find information such as:
+
+- `size`: number of buckets in the hash table (the parameter given to `_new`)
+- `nkeys`: how many total keys are currently in the hash
+- `nempty`: how many buckets are empty (out of `size`)
+- `nused`: how many buckets are non-empty (out of `size`)
+- `ncollisions`: how many buckets hold more than one value
+- `ninchainmin`: minimum chain length among non-empty buckets (1 is good, much larger is not)
+- `ninchainmax`: maximum chain length among non-empty buckets (1 is good, much larger is not)
+- `avg_chain_len`: average chain length among non-empty buckets (1.0 is good, much larger is not)
+- `load_factor`: how many buckets are used compared to its size (`nused`/`size`)
 
 # Key type override
 

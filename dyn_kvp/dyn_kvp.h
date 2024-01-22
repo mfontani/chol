@@ -61,33 +61,36 @@
 #endif
 #define DYN_KVP_MEMBER_NAME DYN_KVP_F(DYN_KVP_TYPE_NAME, _kv)
 
-#ifdef DYN_KVP_DEFINE_MEMBER_STRUCT
-# error "dyn_kvp.h uses DYN_KVP_DEFINE_MEMBER_STRUCT as a macro, but it's already defined"
-#endif
 #ifndef DYN_KVP_IMPLEMENTATION
-#define DYN_KVP_DEFINE_MEMBER_STRUCT(keytype, valuetype, structname) \
-    struct structname { \
-        keytype key; \
-        valuetype *value; \
-        struct structname *next; \
-    }
-DYN_KVP_DEFINE_MEMBER_STRUCT(DYN_KVP_KEY_TYPE, DYN_KVP_VALUE_TYPE, DYN_KVP_MEMBER_NAME);
-#undef DYN_KVP_DEFINE_MEMBER_STRUCT
+struct DYN_KVP_F(DYN_KVP_TYPE_NAME, _kv) {
+    DYN_KVP_KEY_TYPE key;
+    DYN_KVP_VALUE_TYPE *value;
+    struct DYN_KVP_F(DYN_KVP_TYPE_NAME, _kv) *next;
+};
+#endif
+
+#ifndef DYN_KVP_IMPLEMENTATION
+// Struct to hold hash table statistics
+struct DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats) {
+    size_t nkeys;               // Number of keys in the hash table
+    size_t size;                // Number of buckets in the hash table
+    size_t nused;               // Number of non-empty buckets
+    size_t nempty;              // Number of empty buckets
+    size_t ncollisions;         // Number of buckets with more than one element
+    size_t ninchainmin;         // Minimum chain length among non-empty buckets
+    size_t ninchainmax;         // Maximum chain length among non-empty buckets
+    long double avg_chain_len;  // Average chain length
+    double load_factor;         // Load factor
+};
 #endif
 
 #ifdef DYN_KVP_IMPLEMENTATION
 
-#ifdef DYN_KVP_DEFINE_STRUCT
-# error "dyn_kvp.h uses DYN_KVP_DEFINE_STRUCT as a macro, but it's already defined"
-#endif
-#define DYN_KVP_DEFINE_STRUCT(member_structname, structname) \
-    struct structname { \
-        size_t size; \
-        size_t nkeys; \
-        struct member_structname *hash[]; \
-    }
-DYN_KVP_DEFINE_STRUCT(DYN_KVP_MEMBER_NAME, DYN_KVP_TYPE_NAME);
-#undef DYN_KVP_DEFINE_STRUCT
+struct DYN_KVP_TYPE_NAME {
+    size_t size;
+    size_t nkeys;
+    struct DYN_KVP_MEMBER_NAME *hash[];
+};
 
 #else
 
@@ -104,7 +107,13 @@ struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _new)(size_t size);
 DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _free)(struct DYN_KVP_TYPE_NAME *hash);
 DYN_KVP_EXTERN
+void DYN_KVP_F(DYN_KVP_TYPE_NAME, _clear)(struct DYN_KVP_TYPE_NAME *hash);
+DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key, DYN_KVP_VALUE_TYPE *val);
+DYN_KVP_EXTERN
+struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _copy)(struct DYN_KVP_TYPE_NAME *hash, size_t new_size);
+DYN_KVP_EXTERN
+struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _merge)(struct DYN_KVP_TYPE_NAME *hash1, struct DYN_KVP_TYPE_NAME *hash2, size_t new_size);
 DYN_KVP_EXTERN
 int DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
 DYN_KVP_EXTERN
@@ -115,6 +124,8 @@ DYN_KVP_EXTERN
 size_t DYN_KVP_F(DYN_KVP_TYPE_NAME, _nkeys)(struct DYN_KVP_TYPE_NAME *hash);
 DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash);
+DYN_KVP_EXTERN
+struct DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats) DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats)(struct DYN_KVP_TYPE_NAME *hash);
 
 #undef DYN_KVP_EXTERN
 
@@ -200,6 +211,24 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _free)(struct DYN_KVP_TYPE_NAME *hash)
     free(hash);
 }
 
+// Clear a KVP of this type.
+void DYN_KVP_F(DYN_KVP_TYPE_NAME, _clear)(struct DYN_KVP_TYPE_NAME *hash)
+{
+    if (!hash || !hash->nkeys)
+        return;
+    for (size_t i = 0; i < hash->size; i++)
+    {
+        struct DYN_KVP_MEMBER_NAME *pnext = NULL;
+        for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[i]; p; p = pnext)
+        {
+            pnext = p->next;
+            free(p);
+        }
+        hash->hash[i] = NULL;
+    }
+    hash->nkeys = 0;
+}
+
 // Set a "key" to "val" in a KVP of this type.
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key, DYN_KVP_VALUE_TYPE *val)
 {
@@ -224,6 +253,34 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
     hash->nkeys++;
     hash->hash[hash_index] = p;
     return;
+}
+
+// Copy a hash to a new hash, which contains the same key/values ('tho maybe not in the same order)
+struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _copy)(struct DYN_KVP_TYPE_NAME *hash, size_t new_size)
+{
+    struct DYN_KVP_TYPE_NAME *new_hash = DYN_KVP_F(DYN_KVP_TYPE_NAME, _new)(new_size);
+    if (hash->nkeys)
+        for (size_t i = 0; i < hash->size; i++)
+            for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[i]; p; p = p->next)
+                DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(new_hash, p->key, p->value);
+    return new_hash;
+}
+
+// Merge two hashes in a new hash, which contains the same key/values ('tho
+// maybe not in the same order) as the two hashes, with a given "size".
+// Values from the second hash override values in the first!
+struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _merge)(struct DYN_KVP_TYPE_NAME *hash1, struct DYN_KVP_TYPE_NAME *hash2, size_t new_size)
+{
+    struct DYN_KVP_TYPE_NAME *new_hash = DYN_KVP_F(DYN_KVP_TYPE_NAME, _new)(new_size);
+    if (hash1->nkeys)
+        for (size_t i = 0; i < hash1->size; i++)
+            for (struct DYN_KVP_MEMBER_NAME *p = hash1->hash[i]; p; p = p->next)
+                DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(new_hash, p->key, p->value);
+    if (hash2->nkeys)
+        for (size_t i = 0; i < hash2->size; i++)
+            for (struct DYN_KVP_MEMBER_NAME *p = hash2->hash[i]; p; p = p->next)
+                DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(new_hash, p->key, p->value);
+    return new_hash;
 }
 
 // Does "key" exist in a KVP of this type?
@@ -345,6 +402,43 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash)
         bytes_used, total_bytes_used, bytes_used + total_bytes_used,
         nused, hash->size, pct_slots_used,
         ninchainmin, ninchainmax, avg_chain_len);
+}
+
+// Function to get hash table statistics
+struct DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats) DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats)(struct DYN_KVP_TYPE_NAME *hash)
+{
+    struct DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats) stats = {0};
+    if (!hash)
+        return stats;
+    stats.nkeys = hash->nkeys;
+    stats.size = hash->size;
+    size_t ninchain = 0;
+    for (size_t i = 0; i < hash->size; i++)
+    {
+        if (hash->hash[i] == NULL)
+        {
+            stats.nempty++;
+            continue;
+        }
+        stats.nused++;
+        unsigned long inchain = 0;
+        for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[i]; p; p = p->next)
+            inchain++;
+        if (inchain > 1)
+            stats.ncollisions++;
+        ninchain += inchain;
+        if (inchain > stats.ninchainmax)
+            stats.ninchainmax = inchain;
+        if (inchain < stats.ninchainmin || !stats.ninchainmin)
+            stats.ninchainmin = inchain;
+    }
+    if (stats.nused)
+    {
+        stats.avg_chain_len = ninchain;
+        stats.avg_chain_len /= stats.nused;
+    }
+    stats.load_factor = (double)stats.nused / (double)hash->size;
+    return stats;
 }
 
 #undef DYN_KVP_MEMBER_NAME
