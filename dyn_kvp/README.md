@@ -186,6 +186,10 @@ The backbone of a hash.
 - `_get` returns the (possibly NULL, if not in the hash) "value" corresponding to a given "key".
 - `_del` removes the (possibly not found, but it doesn't matter) "value" corresponding to a given "key". It doesn't "free" the value. That's up to you!
 
+## `_exists`
+
+Returns `0` if the "key" isn't found in the hash, or non-`0` if it is found.
+
 # Member Functions
 
 It's often useful to "get" all key/values from a hash, to then do whatever one wants.

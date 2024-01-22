@@ -31,14 +31,18 @@ void test_basic_foo(void)
     {
         struct bfoo_kvp *hash = bfoo_kvp_new(8);
         tap_is_int(bfoo_kvp_nkeys(hash), 0, "bfoo_kvp_nkeys() returns 0 after bfoo_kvp_new()");
+        tap_is_int(bfoo_kvp_exists(hash, 1), 0, "bfoo_kvp_exists(1) returns 0 after bfoo_kvp_new()");
         bfoo_kvp_del(hash, 1);  // no-op
+        tap_is_int(bfoo_kvp_exists(hash, 1), 0, "bfoo_kvp_exists(1) returns 0 after bfoo_kvp_del()");
         tap_is_int(bfoo_kvp_nkeys(hash), 0, "bfoo_kvp_nkeys() returns 0 after _del()");
         bfoo_kvp_free(hash);
     }
     {
         struct bfoo_kvp *hash = bfoo_kvp_new(8);
         struct basic_foo *f1 = basic_foo_new(1, 2);
+        tap_is_int(bfoo_kvp_exists(hash, 1), 0, "bfoo_kvp_exists(1) returns 0 after bfoo_kvp_new()");
         bfoo_kvp_set(hash, 1, f1);
+        tap_is_int(bfoo_kvp_exists(hash, 1), 1, "bfoo_kvp_exists(1) returns 1 after bfoo_kvp_set()");
         tap_is_int(bfoo_kvp_nkeys(hash), 1, "bfoo_kvp_nkeys() returns 1 after bfoo_kvp_set()");
         tap_is_voidp(bfoo_kvp_get(hash, 1), f1,
             "bfoo_kvp_get(1) returns the same pointer that was passed to bfoo_kvp_set()");
@@ -60,6 +64,10 @@ void test_basic_foo(void)
     bfoo_kvp_set(hash, 1, f1);
     bfoo_kvp_set(hash, 3, f2);
     bfoo_kvp_set(hash, 5, f3);
+    tap_is_int(bfoo_kvp_exists(hash, 1), 1, "bfoo_kvp_exists(1) returns 1 after bfoo_kvp_set()");
+    tap_is_int(bfoo_kvp_exists(hash, 3), 1, "bfoo_kvp_exists(3) returns 1 after bfoo_kvp_set()");
+    tap_is_int(bfoo_kvp_exists(hash, 5), 1, "bfoo_kvp_exists(5) returns 1 after bfoo_kvp_set()");
+    tap_is_int(bfoo_kvp_exists(hash, 2), 0, "bfoo_kvp_exists(2) returns 0 after bfoo_kvp_set()");
     tap_is_int(bfoo_kvp_nkeys(hash), 3, "bfoo_kvp_nkeys() returns 3 after 3 bfoo_kvp_set()s");
     tap_is_voidp(bfoo_kvp_get(hash, 1), f1,
         "bfoo_kvp_get(1) returns the same pointer that was passed to bfoo_kvp_set()");
