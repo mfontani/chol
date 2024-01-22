@@ -186,6 +186,10 @@ The backbone of a hash.
 - `_get` returns the (possibly NULL, if not in the hash) "value" corresponding to a given "key".
 - `_del` removes the (possibly not found, but it doesn't matter) "value" corresponding to a given "key". It doesn't "free" the value. That's up to you!
 
+## `_exists`
+
+Returns `0` if the "key" isn't found in the hash, or non-`0` if it is found.
+
 # Member Functions
 
 It's often useful to "get" all key/values from a hash, to then do whatever one wants.
@@ -195,6 +199,19 @@ A `struct foo_kvp_kv` is provided, which contains the "key", "value", and a usel
 You can `_kv_get` to get a `struct foo_kvp_kv **` which contains all the key/values in the hash, ended by a `NULL` pointer.
 
 Once done with it, you can `_kv_free` it.
+
+# Key type override
+
+By default, this library uses an `unsigned int` key type.
+
+You can override that by defining:
+
+- a `DYN_KVP_KEY_TYPE` (i.e. `#define DYN_KVP_KEY_TYPE const char *`)
+- a `DYN_KVP_HASH_FUNCTION` (i.e. `#define DYN_KVP_HASH_FUNCTION my_custom_hash`), which returns an `unsigned int` in the range `0..size` and takes as parameters:
+  - a `size_t size` of how many slots exist in the hash (as passed to `_new`)
+  - a `DYN_KVP_KEY_TYPE key` representing the key that the custom function should produce a hash for
+
+See `dyn_kvp/tests/charp_key` for an example of this.
 
 # LICENSE
 

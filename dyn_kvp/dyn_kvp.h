@@ -106,6 +106,8 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _free)(struct DYN_KVP_TYPE_NAME *hash);
 DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key, DYN_KVP_VALUE_TYPE *val);
 DYN_KVP_EXTERN
+int DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
+DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
 DYN_KVP_EXTERN
 DYN_KVP_VALUE_TYPE *DYN_KVP_F(DYN_KVP_TYPE_NAME, _get)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
@@ -222,6 +224,18 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
     hash->nkeys++;
     hash->hash[hash_index] = p;
     return;
+}
+
+// Does "key" exist in a KVP of this type?
+int DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key)
+{
+    if (!hash || !hash->nkeys)
+        return 0;
+    unsigned int hash_index = DYN_KVP_HASH_FUNCTION(hash->size, key);
+    for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[hash_index]; p; p = p->next)
+        if (p->key == key)
+            return 1;
+    return 0;
 }
 
 // Delete a "key", if found, from a KVP of this type.
