@@ -83,6 +83,7 @@ DYN_KVP_DEFINE_MEMBER_STRUCT(DYN_KVP_KEY_TYPE, DYN_KVP_VALUE_TYPE, DYN_KVP_MEMBE
 #define DYN_KVP_DEFINE_STRUCT(member_structname, structname) \
     struct structname { \
         size_t size; \
+        size_t nkeys; \
         struct member_structname *hash[]; \
     }
 DYN_KVP_DEFINE_STRUCT(DYN_KVP_MEMBER_NAME, DYN_KVP_TYPE_NAME);
@@ -109,6 +110,8 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
 DYN_KVP_EXTERN
 DYN_KVP_VALUE_TYPE *DYN_KVP_F(DYN_KVP_TYPE_NAME, _get)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
 DYN_KVP_EXTERN
+size_t DYN_KVP_F(DYN_KVP_TYPE_NAME, _nkeys)(struct DYN_KVP_TYPE_NAME *hash);
+DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash);
 
 #undef DYN_KVP_EXTERN
@@ -125,37 +128,36 @@ void DYN_KVP_F(DYN_KVP_MEMBER_NAME, _free)(struct DYN_KVP_MEMBER_NAME **hash)
     free(hash);
 }
 
-#ifndef DYN_KVP_REALLOC
-# define DYN_KVP_REALLOC(result, type, number) \
-    do { \
-        type *tmp_realloc = realloc(result, sizeof(type) * (number)); \
-        if (tmp_realloc == NULL) { \
-            perror("realloc failure"); \
-            fprintf(stderr, "Realloc failure at %s:%d\n", __FILE__, __LINE__); \
-            abort(); \
-        } \
-        result = tmp_realloc; \
-    } while (0)
-#endif
-
 // Create a NULL-terminated array from a KVP of this type.
 // Remember to _free() it!
 struct DYN_KVP_MEMBER_NAME **DYN_KVP_F(DYN_KVP_MEMBER_NAME, _new)(struct DYN_KVP_TYPE_NAME *hash)
 {
     struct DYN_KVP_MEMBER_NAME **new_hash = NULL;
-    int found = 0;
-    DYN_KVP_REALLOC(new_hash, struct DYN_KVP_MEMBER_NAME *, found + 1);
-    new_hash[found] = NULL;
+    new_hash = malloc(sizeof(struct DYN_KVP_MEMBER_NAME *) * (hash->nkeys + 1));
+    if (!new_hash)
+    {
+        perror("malloc failure");
+        fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
+        abort();
+    }
+    for (int i = 0; i <= hash->nkeys; i++)
+        new_hash[i] = NULL;
+    int inew = 0;
     for (int i = 0; i < hash->size; i++)
         for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[i]; p; p = p->next)
         {
-            DYN_KVP_REALLOC(new_hash[found], struct DYN_KVP_MEMBER_NAME, 1);
-            new_hash[found]->key = p->key;
-            new_hash[found]->value = p->value;
-            new_hash[found]->next = NULL;
-            found++;
-            DYN_KVP_REALLOC(new_hash, struct DYN_KVP_MEMBER_NAME *, found + 1);
-            new_hash[found] = NULL;
+            // assert(inew < hash->nkeys);
+            new_hash[inew] = malloc(sizeof(struct DYN_KVP_MEMBER_NAME));
+            if (!new_hash[inew])
+            {
+                perror("malloc failure");
+                fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
+                abort();
+            }
+            new_hash[inew]->key = p->key;
+            new_hash[inew]->value = p->value;
+            new_hash[inew]->next = NULL;
+            inew++;
         }
     return new_hash;
 }
@@ -173,6 +175,7 @@ struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _new)(size_t size)
         abort();
     }
     hash->size = size;
+    hash->nkeys = 0;
     for (int i = 0; i < size; i++)
         hash->hash[i] = NULL;
     return hash;
@@ -216,6 +219,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
     p->key = key;
     p->value = val;
     p->next = hash->hash[hash_index];
+    hash->nkeys++;
     hash->hash[hash_index] = p;
     return;
 }
@@ -223,7 +227,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
 // Delete a "key", if found, from a KVP of this type.
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key)
 {
-    if (!hash)
+    if (!hash || !hash->nkeys)
         return;
     unsigned int hash_index = DYN_KVP_HASH_FUNCTION(hash->size, key);
     struct DYN_KVP_MEMBER_NAME *prev = NULL;
@@ -236,6 +240,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
             else
                 hash->hash[hash_index] = p->next;
             free(p);
+            hash->nkeys--;
             return;
         }
         prev = p;
@@ -246,7 +251,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
 // Returns NULL if not found.
 DYN_KVP_VALUE_TYPE *DYN_KVP_F(DYN_KVP_TYPE_NAME, _get)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key)
 {
-    if (!hash)
+    if (!hash || !hash->nkeys)
         return NULL;
     unsigned int hash_index = DYN_KVP_HASH_FUNCTION(hash->size, key);
     for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[hash_index]; p; p = p->next)
@@ -260,7 +265,15 @@ DYN_KVP_VALUE_TYPE *DYN_KVP_F(DYN_KVP_TYPE_NAME, _get)(struct DYN_KVP_TYPE_NAME 
 # undef DYN_KVP_HASH_FUNCTION
 #endif
 
-// Print stats to STOUT for a KVP of this type.
+// How many keys are in a KVP of this type?
+size_t DYN_KVP_F(DYN_KVP_TYPE_NAME, _nkeys)(struct DYN_KVP_TYPE_NAME *hash)
+{
+    if (!hash)
+        return 0;
+    return hash->nkeys;
+}
+
+// Print stats to STDOUT for a KVP of this type.
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash)
 {
     if (!hash)
@@ -305,8 +318,9 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash)
     }
     if (!foundMin)
         ninchainmin = ninchainmax;
-    printf("%s(%p): %zu[+%zu=%zu] bytes used, %3lu/%3lu (%6.2f%%) slots used. Min %lu, Max %lu, Avg %.2f.\r\n",
-        __func__, hash, bytes_used, total_bytes_used, bytes_used + total_bytes_used,
+    printf("%s(%p)[nkeys=%zu]: %zu[+%zu=%zu] bytes used, %3lu/%3lu (%6.2f%%) slots used. Min %lu, Max %lu, Avg %.2f.\r\n",
+        __func__, hash, hash->nkeys,
+        bytes_used, total_bytes_used, bytes_used + total_bytes_used,
         nused, hash->size, nused * 100.0 / hash->size,
         ninchainmin, ninchainmax, nused ? 1.0 * ninchain / nused * 1.0 : 0.0);
 }
