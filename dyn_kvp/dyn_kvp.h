@@ -125,7 +125,7 @@ void DYN_KVP_F(DYN_KVP_MEMBER_NAME, _free)(struct DYN_KVP_MEMBER_NAME **hash)
 {
     if (!hash)
         return;
-    for (int i = 0; hash[i] != NULL; i++)
+    for (size_t i = 0; hash[i] != NULL; i++)
         free(hash[i]);
     free(hash);
 }
@@ -139,13 +139,13 @@ struct DYN_KVP_MEMBER_NAME **DYN_KVP_F(DYN_KVP_MEMBER_NAME, _new)(struct DYN_KVP
     if (!new_hash)
     {
         perror("malloc failure");
-        fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
+        (void)fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
         abort();
     }
-    for (int i = 0; i <= hash->nkeys; i++)
+    for (size_t i = 0; i <= hash->nkeys; i++)
         new_hash[i] = NULL;
     int inew = 0;
-    for (int i = 0; i < hash->size; i++)
+    for (size_t i = 0; i < hash->size; i++)
         for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[i]; p; p = p->next)
         {
             // assert(inew < hash->nkeys);
@@ -153,7 +153,7 @@ struct DYN_KVP_MEMBER_NAME **DYN_KVP_F(DYN_KVP_MEMBER_NAME, _new)(struct DYN_KVP
             if (!new_hash[inew])
             {
                 perror("malloc failure");
-                fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
+                (void)fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
                 abort();
             }
             new_hash[inew]->key = p->key;
@@ -173,12 +173,12 @@ struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _new)(size_t size)
     if (!hash)
     {
         perror("malloc failure");
-        fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
+        (void)fprintf(stderr, "Malloc failure at %s:%d\n", __FILE__, __LINE__);
         abort();
     }
     hash->size = size;
     hash->nkeys = 0;
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
         hash->hash[i] = NULL;
     return hash;
 }
@@ -188,7 +188,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _free)(struct DYN_KVP_TYPE_NAME *hash)
 {
     if (!hash)
         return;
-    for (int i = 0; i < hash->size; i++)
+    for (size_t i = 0; i < hash->size; i++)
     {
         struct DYN_KVP_MEMBER_NAME *pnext = NULL;
         for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[i]; p; p = pnext)
@@ -297,17 +297,17 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash)
     }
     size_t bytes_used = sizeof(struct DYN_KVP_TYPE_NAME) + hash->size * sizeof(void *);
     size_t total_bytes_used = 0UL;
-    unsigned long nempty = 0UL;
-    unsigned long nused = 0UL;
-    unsigned long ninchain = 0UL;
-    unsigned long ninchainmin = ULONG_MAX;
-    unsigned long ninchainmax = 0UL;
+    // unsigned long nempty = 0UL;
+    size_t nused = 0UL;
+    size_t ninchain = 0UL;
+    size_t ninchainmin = ULONG_MAX;
+    size_t ninchainmax = 0UL;
     int foundMin = 0;
-    for (int i = 0; i < hash->size; i++)
+    for (size_t i = 0; i < hash->size; i++)
     {
         if (hash->hash[i] == NULL)
         {
-            nempty++;
+            // nempty++;
             continue;
         }
         nused++;
@@ -332,11 +332,19 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _stats_printf)(struct DYN_KVP_TYPE_NAME *hash)
     }
     if (!foundMin)
         ninchainmin = ninchainmax;
-    printf("%s(%p)[nkeys=%zu]: %zu[+%zu=%zu] bytes used, %3lu/%3lu (%6.2f%%) slots used. Min %lu, Max %lu, Avg %.2f.\r\n",
-        __func__, hash, hash->nkeys,
+    long double pct_slots_used = nused;
+    pct_slots_used /= hash->size;
+    long double avg_chain_len = 0.0L;
+    if (nused)
+    {
+        avg_chain_len = ninchain;
+        avg_chain_len /= nused;
+    }
+    printf("%s(%p)[nkeys=%zu]: %zu[+%zu=%zu] bytes used, %3zu/%3zu (%6.2Lf%%) slots used. Min %zu, Max %zu, Avg %.2Lf.\r\n",
+        __func__, (void *)hash, hash->nkeys,
         bytes_used, total_bytes_used, bytes_used + total_bytes_used,
-        nused, hash->size, nused * 100.0 / hash->size,
-        ninchainmin, ninchainmax, nused ? 1.0 * ninchain / nused * 1.0 : 0.0);
+        nused, hash->size, pct_slots_used,
+        ninchainmin, ninchainmax, avg_chain_len);
 }
 
 #undef DYN_KVP_MEMBER_NAME
