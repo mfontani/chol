@@ -200,6 +200,19 @@ You can `_kv_get` to get a `struct foo_kvp_kv **` which contains all the key/val
 
 Once done with it, you can `_kv_free` it.
 
+# Key type override
+
+By default, this library uses an `unsigned int` key type.
+
+You can override that by defining:
+
+- a `DYN_KVP_KEY_TYPE` (i.e. `#define DYN_KVP_KEY_TYPE const char *`)
+- a `DYN_KVP_HASH_FUNCTION` (i.e. `#define DYN_KVP_HASH_FUNCTION my_custom_hash`), which returns an `unsigned int` in the range `0..size` and takes as parameters:
+  - a `size_t size` of how many slots exist in the hash (as passed to `_new`)
+  - a `DYN_KVP_KEY_TYPE key` representing the key that the custom function should produce a hash for
+
+See `dyn_kvp/tests/charp_key` for an example of this.
+
 # LICENSE
 
 The MIT License (MIT)
