@@ -209,6 +209,62 @@ void test_basic_foo(void)
         tap_diag("stats.load_factor   = %f", stats.load_factor);    // 1.0
         bfoo_kvp_free(copy);
     }
+    {
+        bfoo_kvp_clear(hash);
+        bfoo_kvp_set(hash, 1, f1);
+        bfoo_kvp_set(hash, 2, f1);
+        bfoo_kvp_set(hash, 5, f1);
+        struct bfoo_kvp *hash2 = bfoo_kvp_new(8);
+        bfoo_kvp_set(hash2, 1, f2);
+        bfoo_kvp_set(hash2, 2, f3);
+        struct bfoo_kvp *removed = bfoo_kvp_remove(hash, hash2, 8);
+        assert(removed != NULL);
+        tap_is_int(bfoo_kvp_nkeys(removed), 1, "bfoo_kvp_nkeys(removed) returns 1 after bfoo_kvp_remove(hash, hash2)");
+        tap_is_voidp(bfoo_kvp_get(removed, 1), NULL,
+            "bfoo_kvp_get(removed, 1) returns NULL as hash had it, and hash2 had it too");
+        tap_is_voidp(bfoo_kvp_get(removed, 2), NULL,
+            "bfoo_kvp_get(removed, 2) returns NULL as hash had it, and hash2 had it too");
+        tap_is_voidp(bfoo_kvp_get(removed, 5), f1,
+            "bfoo_kvp_get(removed, 5) returns f1 as hash had it, but hash2 did not have it");
+        bfoo_kvp_free(removed);
+        bfoo_kvp_free(hash2);
+    }
+    {
+        bfoo_kvp_clear(hash);
+        bfoo_kvp_set(hash, 1, f1);
+        bfoo_kvp_set(hash, 2, f1);
+        bfoo_kvp_set(hash, 5, f1);
+        struct bfoo_kvp *hash2 = bfoo_kvp_new(8);
+        bfoo_kvp_set(hash2, 1, f2);
+        bfoo_kvp_set(hash2, 2, f3);
+        {
+            struct bfoo_kvp *intersected = bfoo_kvp_intersect(hash, hash2, 8);
+            assert(intersected != NULL);
+            tap_is_int(bfoo_kvp_nkeys(intersected), 2, "bfoo_kvp_nkeys(intersected) returns 2 after bfoo_kvp_intersect(hash, hash2)");
+            tap_is_voidp(bfoo_kvp_get(intersected, 1), f1,
+                "bfoo_kvp_get(intersected, 1) returns f1 as hash had it as f1, and hash2 had it too");
+            tap_is_voidp(bfoo_kvp_get(intersected, 2), f1,
+                "bfoo_kvp_get(intersected, 2) returns f1 as hash had it as f1, and hash2 had it too");
+            tap_is_voidp(bfoo_kvp_get(intersected, 5), NULL,
+                "bfoo_kvp_get(intersected, 5) returns NULL as hash had it, but hash2 did not have it");
+            bfoo_kvp_free(intersected);
+        }
+        // Swap order of arguments to "get" values from the other hash.
+        {
+            // NOLINTNEXTLINE(readability-suspicious-call-argument)
+            struct bfoo_kvp *intersected = bfoo_kvp_intersect(hash2, hash, 8);
+            assert(intersected != NULL);
+            tap_is_int(bfoo_kvp_nkeys(intersected), 2, "bfoo_kvp_nkeys(intersected) returns 2 after bfoo_kvp_intersect(hash2, hash)");
+            tap_is_voidp(bfoo_kvp_get(intersected, 1), f2,
+                "bfoo_kvp_get(intersected, 1) returns f2 as hash had it, and hash2 had it too as f2");
+            tap_is_voidp(bfoo_kvp_get(intersected, 2), f3,
+                "bfoo_kvp_get(intersected, 2) returns f3 as hash had it, and hash2 had it too as f3");
+            tap_is_voidp(bfoo_kvp_get(intersected, 5), NULL,
+                "bfoo_kvp_get(intersected, 5) returns NULL as hash had it, but hash2 did not have it");
+            bfoo_kvp_free(intersected);
+        }
+        bfoo_kvp_free(hash2);
+    }
     bfoo_kvp_free(hash);
     basic_foo_free(f1);
     basic_foo_free(f2);
