@@ -228,6 +228,13 @@ Returns a new hash with keys and values from the first one, _without_ keys/value
 
 If a key is found in both hashes, the copy won't have it.
 
+## `_intersect`
+
+Returns a new hash with keys common between the two hashes, the given "new_size", and values from the first one. Remember to `_free` them!
+If you need values from the other hash, swap the arguments!
+
+If a key isn't found in both hashes, the copy won't have it.
+
 # Member Functions
 
 It's often useful to "get" all key/values from a hash, to then do whatever one wants.

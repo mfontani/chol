@@ -117,6 +117,8 @@ struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _merge)(struct DYN_KVP_TY
 DYN_KVP_EXTERN
 struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _remove)(struct DYN_KVP_TYPE_NAME *hash1, struct DYN_KVP_TYPE_NAME *hash2, size_t new_size);
 DYN_KVP_EXTERN
+struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _intersect)(struct DYN_KVP_TYPE_NAME *hash1, struct DYN_KVP_TYPE_NAME *hash2, size_t new_size);
+DYN_KVP_EXTERN
 int DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
 DYN_KVP_EXTERN
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key);
@@ -297,6 +299,23 @@ struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _remove)(struct DYN_KVP_T
         for (size_t i = 0; i < hash1->size; i++)
             for (struct DYN_KVP_MEMBER_NAME *p = hash1->hash[i]; p; p = p->next)
                 if (hash2_nkeys && !DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(hash2, p->key))
+                    DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(new_hash, p->key, p->value);
+    return new_hash;
+}
+
+// Create a new hash containing keys in the first hash which are also present
+// in the second hash, with values from the first hash and with a given "size".
+// If you want values from the second one, swap the parameters!
+struct DYN_KVP_TYPE_NAME *DYN_KVP_F(DYN_KVP_TYPE_NAME, _intersect)(struct DYN_KVP_TYPE_NAME *hash1, struct DYN_KVP_TYPE_NAME *hash2, size_t new_size)
+{
+    struct DYN_KVP_TYPE_NAME *new_hash = DYN_KVP_F(DYN_KVP_TYPE_NAME, _new)(new_size);
+    if (!hash1->nkeys)
+        return new_hash;
+    size_t hash2_nkeys = hash2->nkeys;
+    if (hash1->nkeys)
+        for (size_t i = 0; i < hash1->size; i++)
+            for (struct DYN_KVP_MEMBER_NAME *p = hash1->hash[i]; p; p = p->next)
+                if (hash2_nkeys && DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(hash2, p->key))
                     DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(new_hash, p->key, p->value);
     return new_hash;
 }
