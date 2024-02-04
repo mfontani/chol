@@ -75,6 +75,10 @@ not ok 1 one1 == one2 (got 1, wanted 2) [ at foo.c:1234 ]
 # one1=1 != one2=2?!
 ```
 
+## `tap_is_ulong`
+
+Same as `tap_is_int`, but for `unsigned long` arguments.
+
 ## `tap_is_voidp`
 
 Sugar to check whether two `void *` values point to the same place. Returns the result of the comparison.
