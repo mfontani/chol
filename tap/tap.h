@@ -11,6 +11,9 @@ extern void tap_done_testing(void);
 extern int tap_is_int_(int got, int wanted, char *test_description);
 #define tap_is_int(got, wanted, test_description) \
     tap_is_int_(got, wanted, test_description TAP_AT)
+extern int tap_is_ulong_(unsigned long got, unsigned long wanted, char *test_description);
+#define tap_is_ulong(got, wanted, test_description) \
+    tap_is_ulong_(got, wanted, test_description TAP_AT)
 extern int tap_is_voidp_(void *got, void *wanted, char *test_description);
 #define tap_is_voidp(got, wanted, test_description) \
     tap_is_voidp_(got, wanted, test_description TAP_AT)

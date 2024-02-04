@@ -14,6 +14,16 @@ int tap_is_int_(int got, int wanted, char *test_description)
             tap_test_number, test_description, got, wanted);
     return got == wanted;
 }
+int tap_is_ulong_(unsigned long got, unsigned long wanted, char *test_description)
+{
+    tap_test_number++;
+    if (got == wanted)
+        printf("ok %u %s\n", tap_test_number, test_description);
+    else
+        printf("not ok %u %s (got %lu wanted %lu)\n",
+            tap_test_number, test_description, got, wanted);
+    return got == wanted;
+}
 int tap_is_voidp_(void *got, void *wanted, char *test_description)
 {
     tap_test_number++;
