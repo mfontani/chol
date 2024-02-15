@@ -10,6 +10,36 @@ Most should be in working condition, but might lack tests or examples or might j
 
 Use at your peril, and/or submit issues and pull requests.
 
+# What is included?
+
+## `dyn_dllist`
+
+A C "dynamic" doubly-linked list header-only library.
+
+You choose the type of the member item and the new struct name. You get a bunch of functions you can use to interact with that new struct type: create one, free one, prepend or append an item, iterate the list, or even grep it returning a new one.
+
+See [dyn_dllist/README.md](dyn_dllist/README.md) for more information.
+
+## `dyn_kvp`
+
+A C "dynamic" key/value pair (aka "hash" or "dict") library.
+
+You choose the type of the "value" of the pair (the "key" defaults to "unsigned int") and the new struct name. Optionally you can also choose the type of the "key" of the pair and provide a hashing function. You get a bunch of functions you can use to interact with that new struct type: create one, free one, set or get or delete an item from the hash, but also perform intersection or merging into new structures.
+
+See [dyn_kvp/README.md](dyn_kvp/README.md) for more information.
+
+## `tap`
+
+This is mostly for internal use by this repository, but might be useful to others.
+
+A minimalistic Test Anything Protocol for C.
+
+You include the header, and gain the ability to call functions like `test_is_int(a, b, "test name")` and ultimately `tap_done_testing()` once done.
+
+You gain the ability to `prove ./a.out :: some parameters` and have a nice output for your tests' failures.
+
+See [tap/README.md](tap/README.md) for more information.
+
 # LICENSE
 
 The MIT License (MIT)
