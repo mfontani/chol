@@ -70,7 +70,7 @@ In one header file, you can grab/create the struct definitions at compile time. 
 #undef DYN_KVP_VALUE_TYPE
 ```
 
-That `#include "dyn_dll.h"` will result in something like this being inserted in the header:
+That `#include "dyn_kvp.h"` will result in something like this being inserted in the header:
 
 ```c
 struct foo_kvp;

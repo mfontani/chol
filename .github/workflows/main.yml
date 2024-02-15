@@ -14,18 +14,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: dyn_dll all functions tested at least once
+      - name: dyn_dllist all functions tested at least once
         run: |
           set +e
-          cd dyn_dll
-          used_in_tests=$( perl -nE'm!DYN_DLL_F\(DYN_DLL_TYPE_NAME, (_\w+)\)\((void|struct DYN_DLL_TYPE_NAME.*).+\);$! and say $1' dyn_dll.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -o "$which" -- tests | wc -l )" ; done | sort -rnk2 )
+          cd dyn_dllist
+          used_in_tests=$( perl -nE'm!DYN_DLLIST_F\(DYN_DLLIST_TYPE_NAME, (_\w+)\)\((void|struct DYN_DLLIST_TYPE_NAME.*).+\);$! and say $1' dyn_dllist.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -o "$which" -- tests | wc -l )" ; done | sort -rnk2 )
           not_tested=$( printf '%s\n' "$used_in_tests" | grep '[ ]0$' )
           if [[ -n "$not_tested" ]]; then
-            >&2 echo "dyn_dll NOT TESTED:"
+            >&2 echo "dyn_dllist NOT TESTED:"
             printf '%s\n' "$not_tested"
             exit 1
           fi
-          echo "dyn_dll tests by function:"
+          echo "dyn_dllist tests by function:"
           printf '%s\n' "$used_in_tests"
       - name: dyn_kvp all functions tested at least once
         run: |
@@ -52,17 +52,17 @@ jobs:
         run: |
           apt-get -qq update
           apt-get -qq install -y build-essential git-core perl valgrind
-      - name: dyn_dll examples
+      - name: dyn_dllist examples
         timeout-minutes: 2
         run: |
-          cd dyn_dll
+          cd dyn_dllist
           ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
           ( cd examples/two_files ; make ; ./two_files )
           ( cd examples/makefile_gen ; make ; ./makefile_gen )
-      - name: dyn_dll tests
+      - name: dyn_dllist tests
         timeout-minutes: 2
         run: |
-          cd dyn_dll/tests
+          cd dyn_dllist/tests
           make
       - name: dyn_kvp examples
         timeout-minutes: 2
@@ -88,17 +88,17 @@ jobs:
         run: |
           apt-get -qq update
           apt-get -qq install -y build-essential git-core perl valgrind
-      - name: dyn_dll examples
+      - name: dyn_dllist examples
         timeout-minutes: 2
         run: |
-          cd dyn_dll
+          cd dyn_dllist
           ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
           ( cd examples/two_files ; make ; ./two_files )
           ( cd examples/makefile_gen ; make ; ./makefile_gen )
-      - name: dyn_dll tests
+      - name: dyn_dllist tests
         timeout-minutes: 2
         run: |
-          cd dyn_dll/tests
+          cd dyn_dllist/tests
           make
       - name: dyn_kvp examples
         timeout-minutes: 2
