@@ -1,6 +1,6 @@
-# `dyn_dll.h` - C "dynamic" doubly-linked-list header-only library
+# `dyn_dllist.h` - C "dynamic" doubly-linked-list header-only library
 
-This "macro-ed" header file creates definitions and implementations for a doubly-linked list that has a given `DYN_DLL_VALUE_TYPE *` as "value", and where the name for `struct`s and functions are "templated" via the given `DYN_DLL_TYPE_NAME`, providing type safety.
+This "macro-ed" header file creates definitions and implementations for a doubly-linked list that has a given `DYN_DLLIST_VALUE_TYPE *` as "value", and where the name for `struct`s and functions are "templated" via the given `DYN_DLLIST_TYPE_NAME`, providing type safety.
 
 The system only helps manage (via `_new` and `_free` suffixed function names) the lifecycle of the list itself, NOT of the members you put in them. That is up to your code.
 
@@ -12,20 +12,20 @@ Say you've got just one `main.c` file, containing a struct declaration for which
 struct foo { ... };
 ```
 
-The `DYN_DLL_VALUE_TYPE` for this will be `struct foo`, and the doubly-linked list will contain a pointer to one.
+The `DYN_DLLIST_VALUE_TYPE` for this will be `struct foo`, and the doubly-linked list will contain a pointer to one.
 
-You'll have to pick a name for the new _struct name_ (and related _functions' prefix_). Let's pick `foo_list` for it: the `DYN_DLL_TYPE_NAME` you'll want to specify will be `foo_list`.
+You'll have to pick a name for the new _struct name_ (and related _functions' prefix_). Let's pick `foo_list` for it: the `DYN_DLLIST_TYPE_NAME` you'll want to specify will be `foo_list`.
 
-You'll have to copy the `dyn_dll.h` file to the same directory as `main.c`, and write in `main.c`:
+You'll have to copy the `dyn_dllist.h` file to the same directory as `main.c`, and write in `main.c`:
 
 ```c
-#define DYN_DLL_VALUE_TYPE struct foo
-#define DYN_DLL_TYPE_NAME foo_list
-#define DYN_DLL_IMPLEMENTATION
-#include "dyn_dll.h"
-#undef DYN_DLL_IMPLEMENTATION
-#undef DYN_DLL_TYPE_NAME
-#undef DYN_DLL_VALUE_TYPE
+#define DYN_DLLIST_VALUE_TYPE struct foo
+#define DYN_DLLIST_TYPE_NAME foo_list
+#define DYN_DLLIST_IMPLEMENTATION
+#include "dyn_dllist.h"
+#undef DYN_DLLIST_IMPLEMENTATION
+#undef DYN_DLLIST_TYPE_NAME
+#undef DYN_DLLIST_VALUE_TYPE
 ```
 
 In your code, you'll then use `struct foo_list *` to declare a variable of the newly created type, and will use functions named `foo_list_*` to interact with it:
@@ -33,7 +33,7 @@ In your code, you'll then use `struct foo_list *` to declare a variable of the n
 ```c
 // Create one of your pre-existing structs, somehow:
 struct foo *val = create_a_foo(/*...*/); // or malloc(sizeof(struct foo)) or whatever
-// Here's what the "dyn_dll.h" gives you:
+// Here's what the "dyn_dllist.h" gives you:
 struct foo_list *list = foo_list_new();
 // Append "val" to the list:
 foo_list_append(list, val);
@@ -60,14 +60,14 @@ In one header file, you can grab/create the struct definitions at compile time. 
 // Your pre-existing headers, giving access to "struct foo" definition:
 #include "your_other_headers.h"
 // What you need to add:
-#define DYN_DLL_VALUE_TYPE struct foo
-#define DYN_DLL_TYPE_NAME foo_list
-#include "dyn_dll.h"
-#undef DYN_DLL_TYPE_NAME
-#undef DYN_DLL_VALUE_TYPE
+#define DYN_DLLIST_VALUE_TYPE struct foo
+#define DYN_DLLIST_TYPE_NAME foo_list
+#include "dyn_dllist.h"
+#undef DYN_DLLIST_TYPE_NAME
+#undef DYN_DLLIST_VALUE_TYPE
 ```
 
-That `#include "dyn_dll.h"` will result in something like this being inserted in the header:
+That `#include "dyn_dllist.h"` will result in something like this being inserted in the header:
 
 ```c
 struct foo_list;
@@ -76,7 +76,7 @@ extern void foo_list_free(struct foo_list *list);
 // ...
 ```
 
-Multiple such `#include "dyn_dll.h"` (for **different** `DYN_DLL_VALUE_TYPE`s!) can be placed in the same header file.
+Multiple such `#include "dyn_dllist.h"` (for **different** `DYN_DLLIST_VALUE_TYPE`s!) can be placed in the same header file.
 Remember to `#undef`, then `#define` again, properties for the new type(s).
 
 ## Implementation
@@ -87,16 +87,16 @@ Similarly to the definition, you'll likely want to put the implementation in one
 // Your pre-existing headers, giving access to "struct foo" definition:
 #include "your_other_headers.h"
 // What you need to add:
-#define DYN_DLL_VALUE_TYPE struct foo
-#define DYN_DLL_TYPE_NAME foo_list
-#define DYN_DLL_IMPLEMENTATION
-#include "dyn_dll.h"
-#undef DYN_DLL_IMPLEMENTATION
-#undef DYN_DLL_TYPE_NAME
-#undef DYN_DLL_VALUE_TYPE
+#define DYN_DLLIST_VALUE_TYPE struct foo
+#define DYN_DLLIST_TYPE_NAME foo_list
+#define DYN_DLLIST_IMPLEMENTATION
+#include "dyn_dllist.h"
+#undef DYN_DLLIST_IMPLEMENTATION
+#undef DYN_DLLIST_TYPE_NAME
+#undef DYN_DLLIST_VALUE_TYPE
 ```
 
-The fuller implementation will instead be placed in the file by the `#include "dyn_dll.h"`, i.e. something like:
+The fuller implementation will instead be placed in the file by the `#include "dyn_dllist.h"`, i.e. something like:
 
 ```c
 struct foo_list__member { foo *p; struct foo_list__member *next; struct foo_list__member *prev; };
@@ -115,7 +115,7 @@ Both `gcc` or `tcc` or other compilers can help do this, via `-E` or similar fla
 The definitions:
 
 ```bash
-$ gcc -E -P -CC -D DYN_DLL_VALUE_TYPE='struct foo' -D DYN_DLL_TYPE_NAME=foo_list dyn_dll.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$'
+$ gcc -E -P -CC -D DYN_DLLIST_VALUE_TYPE='struct foo' -D DYN_DLLIST_TYPE_NAME=foo_list dyn_dllist.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$'
 struct foo_list;
 extern
 struct foo_list *foo_list_new(void);
@@ -125,7 +125,7 @@ struct foo_list *foo_list_new(void);
 The implementation:
 
 ```bash
-$ gcc -E -P -CC -D DYN_DLL_VALUE_TYPE='struct foo' -D DYN_DLL_TYPE_NAME=foo_list -D DYN_DLL_IMPLEMENTATION dyn_dll.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$'
+$ gcc -E -P -CC -D DYN_DLLIST_VALUE_TYPE='struct foo' -D DYN_DLLIST_TYPE_NAME=foo_list -D DYN_DLLIST_IMPLEMENTATION dyn_dllist.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$'
 struct foo_list { /* ... */ };
 struct foo_list *foo_list_new(void);
 # ...
@@ -135,25 +135,25 @@ struct foo_list *foo_list_new(void);
 
 You can instruct your build system to automatically generate the header file and the implementation file.
 
-If you use a `Makefile`, you can use this as a starting point. This will rebuild the header file and the implementation file whenever the `Makefile` itself changes (as there might be changes in the `-D ...` defines) or the `dyn_dll.h` changes (as you might get a new version, or tweak it). You might want to ignore those generated files in your build system.
+If you use a `Makefile`, you can use this as a starting point. This will rebuild the header file and the implementation file whenever the `Makefile` itself changes (as there might be changes in the `-D ...` defines) or the `dyn_dllist.h` changes (as you might get a new version, or tweak it). You might want to ignore those generated files in your build system.
 
 ```Makefile
-foo_list.h: Makefile dyn_dll.h
+foo_list.h: Makefile dyn_dllist.h
 	@rm -f $@
 	@printf '// Automatically generated from %s.\n' "$^" > $@
 	@printf '// Automatically generated on   %s\n' "$$(date)" >> $@
 	@printf '#ifndef FOO_LIST_H\n#define FOO_LIST_H\n' >> $@
-	@gcc -E -P -CC -D DYN_DLL_VALUE_TYPE='struct foo' -D DYN_DLL_TYPE_NAME=foo_list dyn_dll.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$$' >> $@
+	@gcc -E -P -CC -D DYN_DLLIST_VALUE_TYPE='struct foo' -D DYN_DLLIST_TYPE_NAME=foo_list dyn_dllist.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$$' >> $@
 	@printf '#endif\n' >> $@
 	@chmod -w $@
 
-foo_list.c: Makefile dyn_dll.h foo_list.h
+foo_list.c: Makefile dyn_dllist.h foo_list.h
 	@rm -f $@
 	@printf '// Automatically generated from %s.\n' "$^" > $@
 	@printf '// Automatically generated on   %s\n' "$$(date)" >> $@
 	@printf '#include "your_project_other_includes.h"\n' >> $@
-	@printf '#include "char_data_dll.h"\n' >> $@
-	@gcc -E -P -CC -D DYN_DLL_VALUE_TYPE=struct foo' -D DYN_DLL_TYPE_NAME=foo_list -D DYN_DLL_IMPLEMENTATION dyn_dll.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$$' >> $@
+	@printf '#include "char_data_dllist.h"\n' >> $@
+	@gcc -E -P -CC -D DYN_DLLIST_VALUE_TYPE=struct foo' -D DYN_DLLIST_TYPE_NAME=foo_list -D DYN_DLLIST_IMPLEMENTATION dyn_dllist.h | perl -0777 -pe's,/[*].*?[*]/,,gs' | grep -v -e '^\s*$$' >> $@
 	@chmod -w $@
 ```
 
@@ -161,15 +161,15 @@ foo_list.c: Makefile dyn_dll.h foo_list.h
 
 The header also declares, and makes available, functions to interact with the doubly-linked list: add, remove, etc.
 
-All functions here are mentioned by suffix. Your `-D DYN_DLL_TYPE_NAME=foo_list` will create functions whose name _starts_ with the value you picked `foo_list`, but whose suffix is constant, i.e. the `_new` will be available to you as `foo_list_new`.
+All functions here are mentioned by suffix. Your `-D DYN_DLLIST_TYPE_NAME=foo_list` will create functions whose name _starts_ with the value you picked `foo_list`, but whose suffix is constant, i.e. the `_new` will be available to you as `foo_list_new`.
 
 ## `_new` & `_free`
 
-`_new` creates a new doubly-linked list, ready to accept (via `_append`, etc) `DYN_DLL_VALUE_TYPE` items in it.
+`_new` creates a new doubly-linked list, ready to accept (via `_append`, etc) `DYN_DLLIST_VALUE_TYPE` items in it.
 
 Once done with the list, remember to use the `_free` function on it.
 
-Note that the `_free` function will **not** free the `DYN_DLL_VALUE_TYPE` values which you might have placed in the list. You'll have to do that yourself, separately!
+Note that the `_free` function will **not** free the `DYN_DLLIST_VALUE_TYPE` values which you might have placed in the list. You'll have to do that yourself, separately!
 
 ## `_size`
 
@@ -242,7 +242,7 @@ Fully iterates the list, and returns the **count** of items "val" for which the 
 
 Returns a **new dll** created by iterating the original list from **from first to last**, calling the given "func" (with user-provided parameter "param") for each item "val" found, and `_append`ing "val" to the new list IFF the "func" returns non-zero.
 
-As such, the new dll will contain matching items while retaining the order in which they were present in the original dll.
+As such, the new dll will contain matching items while retaining the order in which they were present in the original dllist.
 
 Note that the original list is **not** modified, unless the "func" modifies it. It's also safe to remove the given "val" from the list, if you wish to.
 

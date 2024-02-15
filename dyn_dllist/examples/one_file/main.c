@@ -7,13 +7,13 @@ struct foo {
     int b;
 };
 
-#define DYN_DLL_VALUE_TYPE struct foo
-#define DYN_DLL_TYPE_NAME foo_list
-#define DYN_DLL_IMPLEMENTATION
-#include "../../dyn_dll.h"
-#undef DYN_DLL_IMPLEMENTATION
-#undef DYN_DLL_TYPE_NAME
-#undef DYN_DLL_VALUE_TYPE
+#define DYN_DLLIST_VALUE_TYPE struct foo
+#define DYN_DLLIST_TYPE_NAME foo_list
+#define DYN_DLLIST_IMPLEMENTATION
+#include "../../dyn_dllist.h"
+#undef DYN_DLLIST_IMPLEMENTATION
+#undef DYN_DLLIST_TYPE_NAME
+#undef DYN_DLLIST_VALUE_TYPE
 
 int main(void)
 {
