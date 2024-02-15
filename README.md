@@ -28,6 +28,14 @@ You choose the type of the "value" of the pair (the "key" defaults to "unsigned 
 
 See [dyn_kvp/README.md](dyn_kvp/README.md) for more information.
 
+## `sagoma`
+
+A somewhat simple, but powerful, C block profiler which doesn't waste too many resources.
+
+You choose which overall blocks to profile and print stats for, even down to how many clock cycles those took, or how many min/max time they took if they were called multiple times. There's hooks to make it very easy to use, or more verbose but more tweakable.
+
+See [sagoma/README.md](sagoma/README.md) for more information.
+
 ## `tap`
 
 This is mostly for internal use by this repository, but might be useful to others.
