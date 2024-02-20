@@ -40,6 +40,19 @@ jobs:
           fi
           echo "dyn_kvp tests by function:"
           printf '%s\n' "$used_in_tests"
+      - name: dyn_arr all functions tested at least once
+        run: |
+          set +e
+          cd dyn_arr
+          used_in_tests=$( perl -nE'm!DYN_ARR_F\(DYN_ARR_TYPE_NAME, (_\w+)\)\((void|struct DYN_ARR_TYPE_NAME.*).+\);$! and say $1' dyn_arr.h | while read -r which ; do printf '%-20s %s\n' "$which" "$( git grep -o "$which" -- tests | wc -l )" ; done | sort -rnk2 )
+          not_tested=$( printf '%s\n' "$used_in_tests" | grep -v _status | grep '[ ]0$' )
+          if [[ -n "$not_tested" ]]; then
+            >&2 echo "dyn_arr NOT TESTED:"
+            printf '%s\n' "$not_tested"
+            exit 1
+          fi
+          echo "dyn_arr tests by function:"
+          printf '%s\n' "$used_in_tests"
   debian-bullseye:
     needs: exhaustive-tests
     if: always()
@@ -75,6 +88,18 @@ jobs:
         timeout-minutes: 2
         run: |
           cd dyn_kvp/tests
+          make
+      - name: dyn_arr examples
+        timeout-minutes: 2
+        run: |
+          cd dyn_arr
+          ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
+          ( cd examples/two_files ; make ; ./two_files )
+          ( cd examples/makefile_gen ; make ; ./makefile_gen )
+      - name: dyn_arr tests
+        timeout-minutes: 2
+        run: |
+          cd dyn_arr/tests
           make
       - name: sagoma examples
         timeout-minutes: 2
@@ -122,6 +147,18 @@ jobs:
         timeout-minutes: 2
         run: |
           cd dyn_kvp/tests
+          make
+      - name: dyn_arr examples
+        timeout-minutes: 2
+        run: |
+          cd dyn_arr
+          ( cd examples/one_file ; gcc -o ./one_file main.c ; ./one_file )
+          ( cd examples/two_files ; make ; ./two_files )
+          ( cd examples/makefile_gen ; make ; ./makefile_gen )
+      - name: dyn_arr tests
+        timeout-minutes: 2
+        run: |
+          cd dyn_arr/tests
           make
       - name: sagoma examples
         timeout-minutes: 2
