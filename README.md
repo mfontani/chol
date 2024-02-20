@@ -28,6 +28,14 @@ You choose the type of the "value" of the pair (the "key" defaults to "unsigned 
 
 See [dyn_kvp/README.md](dyn_kvp/README.md) for more information.
 
+## `dyn_arr`
+
+A C "dynamic" array-like (vector-like, as the structure has "slack" at either end) header-only library.
+
+You choose the type of "items" contained in the array and the new struct name. You get a bunch of functions you can use to interact with that new struct type: create one, free one, push or pop an item, iterate the array, pre-fill it with values, or remove duplicate items.
+
+See [dyn_arr/README.md](dyn_arr/README.md) for more information.
+
 ## `sagoma`
 
 A somewhat simple, but powerful, C block profiler which doesn't waste too many resources.
