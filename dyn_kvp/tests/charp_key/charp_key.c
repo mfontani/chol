@@ -32,6 +32,8 @@ size_t custom_foo_hash(size_t size, const char *key)
 #define DYN_KVP_KEY_TYPE const char *
 #define DYN_KVP_HASH_FUNCTION custom_foo_hash
 #define DYN_KVP_IMPLEMENTATION
+#define DYN_KVP_COMPARE_FUNCTION(a, b) ((a[0] == b[0]) && !strcmp(a, b))
+#include <string.h> // strcmp
 #include "../../dyn_kvp.h"
 #undef DYN_KVP_IMPLEMENTATION
 #undef DYN_KVP_HASH_FUNCTION
@@ -56,6 +58,12 @@ void test_charp_foo(void)
         struct custom_foo *c1 = custom_foo_new(1, 2);
         cfoo_kvp_set(hash, "foo", c1);
         tap_is_int(cfoo_kvp_nkeys(hash), 1, "cfoo_kvp_nkeys() returns 1 after cfoo_kvp_set()");
+        char foo1[4];
+        foo1[0] = 'f';
+        foo1[1] = 'o';
+        foo1[2] = 'o';
+        foo1[3] = '\0';
+        tap_is_int(cfoo_kvp_exists(hash, foo1), 1, "cfoo_kvp_exists(foo) returns 1 after cfoo_kvp_set()");
         tap_is_int(cfoo_kvp_exists(hash, "foo"), 1, "cfoo_kvp_exists(foo) returns 1 after cfoo_kvp_set()");
         tap_is_int(cfoo_kvp_exists(hash, "bar"), 0, "cfoo_kvp_exists(bar) returns 0 after cfoo_kvp_set()");
         tap_is_voidp(cfoo_kvp_get(hash, "foo"), c1, "cfoo_kvp_get(foo) returns c1 after cfoo_kvp_set()");
