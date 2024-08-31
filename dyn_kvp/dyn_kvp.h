@@ -233,6 +233,10 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _clear)(struct DYN_KVP_TYPE_NAME *hash)
     hash->nkeys = 0;
 }
 
+#ifndef DYN_KVP_COMPARE_FUNCTION
+# define DYN_KVP_COMPARE_FUNCTION(x, y) ((x) == (y))
+#endif
+
 // Set a "key" to "val" in a KVP of this type.
 void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_KEY_TYPE key, DYN_KVP_VALUE_TYPE *val)
 {
@@ -240,7 +244,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _set)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
         return;
     unsigned int hash_index = DYN_KVP_HASH_FUNCTION(hash->size, key);
     for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[hash_index]; p; p = p->next)
-        if (p->key == key)
+        if (DYN_KVP_COMPARE_FUNCTION(p->key, key))
         {
             p->value = val;
             return;
@@ -327,7 +331,7 @@ int DYN_KVP_F(DYN_KVP_TYPE_NAME, _exists)(struct DYN_KVP_TYPE_NAME *hash, DYN_KV
         return 0;
     unsigned int hash_index = DYN_KVP_HASH_FUNCTION(hash->size, key);
     for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[hash_index]; p; p = p->next)
-        if (p->key == key)
+        if (DYN_KVP_COMPARE_FUNCTION(p->key, key))
             return 1;
     return 0;
 }
@@ -341,7 +345,7 @@ void DYN_KVP_F(DYN_KVP_TYPE_NAME, _del)(struct DYN_KVP_TYPE_NAME *hash, DYN_KVP_
     struct DYN_KVP_MEMBER_NAME *prev = NULL;
     for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[hash_index]; p; p = p->next)
     {
-        if (p->key == key)
+        if (DYN_KVP_COMPARE_FUNCTION(p->key, key))
         {
             if (prev)
                 prev->next = p->next;
@@ -363,7 +367,7 @@ DYN_KVP_VALUE_TYPE *DYN_KVP_F(DYN_KVP_TYPE_NAME, _get)(struct DYN_KVP_TYPE_NAME 
         return NULL;
     unsigned int hash_index = DYN_KVP_HASH_FUNCTION(hash->size, key);
     for (struct DYN_KVP_MEMBER_NAME *p = hash->hash[hash_index]; p; p = p->next)
-        if (p->key == key)
+        if (DYN_KVP_COMPARE_FUNCTION(p->key, key))
             return p->value;
     return NULL;
 }

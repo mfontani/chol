@@ -277,6 +277,9 @@ You can override that by defining:
 - a `DYN_KVP_HASH_FUNCTION` (i.e. `#define DYN_KVP_HASH_FUNCTION my_custom_hash`), which returns an `unsigned int` in the range `0..size` and takes as parameters:
   - a `size_t size` of how many slots exist in the hash (as passed to `_new`)
   - a `DYN_KVP_KEY_TYPE key` representing the key that the custom function should produce a hash for
+- a `DYN_KVP_COMPARE_FUNCTION` (default is `#define DYN_KVP_COMPARE_FUNCTION(a, b) ((a) == (b))`, you might want to use something like `#define DYN_KVP_COMPARE_FUNCTION(a, b) ((a)[0] == (b)[0] && !strcmp(a, b))` for a string key), which returns `1` if the two keys are equal, and `0` otherwise, and takes as parameters:
+  - a `DYN_KVP_KEY_TYPE a` representing the item key to compare
+  - a `DYN_KVP_KEY_TYPE b` representing the wanted item key to compare it to
 
 See `dyn_kvp/tests/charp_key` for an example of this.
 
