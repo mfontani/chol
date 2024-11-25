@@ -32,10 +32,9 @@ jobs:
     - name: test dyn_arr
       shell: bash
       run: |
-        sudo apt-get install -y -q valgrind
-        cd dyn_arr/tests;
-        make
-
+        cd dyn_arr/tests
+        make test
+        prove -v ./test
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
