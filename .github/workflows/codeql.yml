@@ -35,6 +35,28 @@ jobs:
         cd dyn_arr/tests
         make test
         prove -v ./test
+
+    - name: test dyn_dllist
+      shell: bash
+      run: |
+        cd dyn_dllist/tests
+        make test
+        prove -v ./test
+
+    - name: test dyn_kvp
+      shell: bash
+      run: |
+        cd dyn_kvp/tests
+        make test
+        prove -v ./test
+        
+    - name: test sagoma
+      shell: bash
+      run: |
+        cd sagoma/tests
+        make test
+        prove -v ./test
+        
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
