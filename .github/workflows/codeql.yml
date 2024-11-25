@@ -32,6 +32,7 @@ jobs:
     - name: test dyn_arr
       shell: bash
       run: |
+        apt-get install -y -q valgrind
         cd dyn_arr/tests;
         make
 
