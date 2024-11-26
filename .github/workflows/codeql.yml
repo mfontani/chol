@@ -35,6 +35,15 @@ jobs:
         cd dyn_arr/tests
         make test
         prove -v ./test
+        cd ../examples/makefile_gen/
+        make
+        ./makefile_gen
+        cd ../one_file/
+        gcc -o main main.c
+        ./main
+        cd ../two_files/
+        make
+        ./two_files
 
     - name: test dyn_dllist
       shell: bash
@@ -42,6 +51,15 @@ jobs:
         cd dyn_dllist/tests
         make test
         prove -v ./test
+        cd ../examples/makefile_gen/
+        make
+        ./makefile_gen
+        cd ../one_file/
+        gcc -o main main.c
+        ./main
+        cd ../two_files/
+        make
+        ./two_files
 
     - name: test dyn_kvp
       shell: bash
@@ -49,14 +67,29 @@ jobs:
         cd dyn_kvp/tests
         make test
         prove -v ./test
-        
+        cd ../examples/makefile_gen/
+        make
+        ./makefile_gen
+        cd ../one_file/
+        gcc -o main main.c
+        ./main
+        cd ../two_files/
+        make
+        ./two_files
+
     - name: test sagoma
       shell: bash
       run: |
         cd sagoma/tests
         make test
         prove -v ./test
-        
+        cd ../examples/disabled/
+        gcc -o main main.c
+        ./main
+        cd ../enabled/
+        gcc -o main main.c
+        ./main
+
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
       with:
