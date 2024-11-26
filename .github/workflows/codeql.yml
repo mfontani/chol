@@ -84,10 +84,10 @@ jobs:
         make test
         prove -v ./test
         cd ../examples/disabled/
-        gcc -o main main.c
+        gcc -o main main.c -lm
         ./main
         cd ../enabled/
-        gcc -o main main.c
+        gcc -o main main.c -lm
         ./main
 
     - name: Perform CodeQL Analysis
